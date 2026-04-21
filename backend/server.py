@@ -12,15 +12,63 @@ from datetime import datetime, timezone, timedelta
 from pydantic import BaseModel, EmailStr
 from typing import Optional, List, Dict, Any
 
-app = FastAPI()
+from contextlib import asynccontextmanager
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await db.users.create_index("email", unique=True)
+    
+    # Seed HRDD Admin
+    admin_email = os.environ.get("ADMIN_EMAIL", "admin@example.com")
+    admin_password = os.environ.get("ADMIN_PASSWORD", "admin123")
+    existing = await db.users.find_one({"email": admin_email})
+    if existing is None:
+        await db.users.insert_one({
+            "email": admin_email,
+            "password_hash": hash_password(admin_password),
+            "name": "HRDD Admin",
+            "role": "HRDD",
+            "created_at": datetime.now(timezone.utc)
+        })
+    elif not verify_password(admin_password, existing.get("password_hash", "")):
+        await db.users.update_one(
+            {"email": admin_email}, 
+            {"$set": {"password_hash": hash_password(admin_password)}}
+        )
+    
+    # Seed Supervisor
+    supervisor_email = "supervisor@example.com"
+    existing_sup = await db.users.find_one({"email": supervisor_email})
+    if not existing_sup:
+        await db.users.insert_one({
+            "email": supervisor_email,
+            "password_hash": hash_password("super123"),
+            "name": "Test Supervisor",
+            "role": "Supervisor",
+            "created_at": datetime.now(timezone.utc)
+        })
+
+    # Seed User
+    user_email = "user@example.com"
+    existing_user = await db.users.find_one({"email": user_email})
+    if not existing_user:
+        await db.users.insert_one({
+            "email": user_email,
+            "password_hash": hash_password("user123"),
+            "name": "Test User",
+            "role": "User",
+            "created_at": datetime.now(timezone.utc)
+        })
+    yield
+
+app = FastAPI(lifespan=lifespan)
 
 # --- CORS ---
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         os.environ.get("FRONTEND_URL", "http://localhost:3000"),
-        "http://localhost:3000",
-        "*" # allowing all for testing, since we might hit from preview urls
+        "http://localhost:3000"
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -104,52 +152,7 @@ class FormUpdateStatusModel(BaseModel):
     status: str
     comment: Optional[str] = None
 
-# --- Admin Seeding ---
-@app.on_event("startup")
-async def startup_event():
-    await db.users.create_index("email", unique=True)
-    
-    # Seed HRDD Admin
-    admin_email = os.environ.get("ADMIN_EMAIL", "admin@example.com")
-    admin_password = os.environ.get("ADMIN_PASSWORD", "admin123")
-    existing = await db.users.find_one({"email": admin_email})
-    if existing is None:
-        await db.users.insert_one({
-            "email": admin_email,
-            "password_hash": hash_password(admin_password),
-            "name": "HRDD Admin",
-            "role": "HRDD",
-            "created_at": datetime.now(timezone.utc)
-        })
-    elif not verify_password(admin_password, existing.get("password_hash", "")):
-        await db.users.update_one(
-            {"email": admin_email}, 
-            {"$set": {"password_hash": hash_password(admin_password)}}
-        )
-    
-    # Seed Supervisor
-    supervisor_email = "supervisor@example.com"
-    existing_sup = await db.users.find_one({"email": supervisor_email})
-    if not existing_sup:
-        await db.users.insert_one({
-            "email": supervisor_email,
-            "password_hash": hash_password("super123"),
-            "name": "Test Supervisor",
-            "role": "Supervisor",
-            "created_at": datetime.now(timezone.utc)
-        })
-
-    # Seed User
-    user_email = "user@example.com"
-    existing_user = await db.users.find_one({"email": user_email})
-    if not existing_user:
-        await db.users.insert_one({
-            "email": user_email,
-            "password_hash": hash_password("user123"),
-            "name": "Test User",
-            "role": "User",
-            "created_at": datetime.now(timezone.utc)
-        })
+# Seed setup moved to lifespan
 
 # --- Auth Endpoints ---
 @app.post("/api/auth/register")
@@ -235,9 +238,9 @@ async def get_forms(user: dict = Depends(get_current_user)):
     elif role == "Supervisor":
         # Supervisor sees their own forms AND pending supervisor forms of others
         # Simplified: sees all for now, in a real app would filter by department
-        query = {}
+        query = {"status": "pending_supervisor"}
     elif role in ["HRDD", "AuthorizedSignatory"]:
-        query = {} # See all
+        query = {"status": {"$in": ["pending_hrdd", "approved", "rejected", "authorized"]}}
         
     cursor = db.forms.find(query).sort("created_at", -1)
     forms = []

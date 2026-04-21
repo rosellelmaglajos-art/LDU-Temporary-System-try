@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
+import html2pdf from 'html2pdf.js';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'sonner';
 import { FileText, Plus, Search, Eye, X, Check, Clock, XCircle, Printer } from 'lucide-react';
@@ -29,7 +30,7 @@ export default function Forms({ view }) {
         if (user.role === 'Supervisor') {
           data = data.filter(f => f.status === 'pending_supervisor');
         } else if (user.role === 'HRDD') {
-          data = data.filter(f => f.status === 'pending_hrdd' || f.status.includes('approved'));
+          data = data.filter(f => f.status === 'pending_hrdd' || f.status?.includes('approved'));
         }
       } else {
         data = data.filter(f => f.user_id === user._id);
@@ -57,8 +58,8 @@ export default function Forms({ view }) {
   };
 
   const getStatusColor = (status) => {
-    if (status.includes('pending')) return 'bg-amber-100 text-amber-800';
-    if (status.includes('approved') || status === 'authorized') return 'bg-emerald-100 text-emerald-800';
+    if (status?.includes('pending')) return 'bg-amber-100 text-amber-800';
+    if (status?.includes('approved') || status === 'authorized') return 'bg-emerald-100 text-emerald-800';
     if (status === 'rejected') return 'bg-red-100 text-red-800';
     return 'bg-slate-100 text-slate-800';
   };
@@ -88,7 +89,7 @@ export default function Forms({ view }) {
       jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
     };
     
-    window.html2pdf().set(opt).from(element).save();
+    html2pdf().set(opt).from(element).save();
   };
 
   return (
@@ -137,7 +138,7 @@ export default function Forms({ view }) {
               ) : forms.length === 0 ? (
                 <tr><td colSpan="5" className="text-center py-8 text-slate-500 font-medium">No forms found.</td></tr>
               ) : (
-                forms.filter(f => filter === 'all' || f.status.includes(filter)).map(form => (
+                forms.filter(f => filter === 'all' || f.status?.includes(filter)).map(form => (
                   <tr key={form._id} className="hover:bg-slate-50/50 transition-colors group">
                     <td className="px-6 py-4 font-bold text-slate-900 capitalize flex items-center gap-3">
                       <div className={`p-2 rounded-lg ${form.type === 'nomination' ? 'bg-blue-100 text-blue-600' : 'bg-purple-100 text-purple-600'}`}>
