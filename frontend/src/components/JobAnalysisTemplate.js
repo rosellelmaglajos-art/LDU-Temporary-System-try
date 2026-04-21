@@ -3,12 +3,12 @@ import React from 'react';
 export default function JobAnalysisTemplate({ id }) {
   return (
     <div id={id} className="pdf-wrapper bg-white text-black font-serif text-[11pt] w-[750px] p-[20px] mx-auto box-border">
-      <style dangerouslySetInnerHTML={{__html: `
+      <style>{`
         .pdf-wrapper table { width: 100%; border-collapse: collapse; margin: 0; padding: 0; }
         .pdf-wrapper td { border: 1px solid black; padding: 4px 5px; vertical-align: top; font-size: 10pt; }
         .pdf-wrapper .bg-blue-light { background-color: #A6C9EC; }
         .pdf-wrapper .bg-blue-pale { background-color: #DAE9F8; }
-      `}}/>
+      `}</style>
       <table>
         <tbody>
           <tr>

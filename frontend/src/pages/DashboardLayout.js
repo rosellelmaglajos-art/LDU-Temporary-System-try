@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Routes, Route, Navigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { LayoutDashboard, FileText, ClipboardCheck, LogOut, Menu, X, User as UserIcon } from 'lucide-react';
@@ -9,14 +9,17 @@ function Sidebar({ isOpen, setIsOpen }) {
   const { user, logout } = useAuth();
   const location = useLocation();
 
-  const links = [
-    { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
-    { name: 'My Forms & Nominations', path: '/dashboard/forms', icon: FileText },
-  ];
+  const getLinks = useCallback(() => {
+    const links = [
+      { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
+      { name: 'My Forms & Nominations', path: '/dashboard/forms', icon: FileText },
+    ];
 
-  if (user?.role !== 'User') {
-    links.push({ name: 'Approvals & Requests', path: '/dashboard/approvals', icon: ClipboardCheck });
-  }
+    if (user?.role !== 'User') {
+      links.push({ name: 'Approvals & Requests', path: '/dashboard/approvals', icon: ClipboardCheck });
+    }
+    return links;
+  }, [user?.role]);
 
   return (
     <>
@@ -32,7 +35,7 @@ function Sidebar({ isOpen, setIsOpen }) {
         
         <div className="p-4 space-y-1">
           <p className="px-4 text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4 mt-2">Menu</p>
-          {links.map((link) => {
+          {getLinks().map((link) => {
             const Icon = link.icon;
             const isActive = location.pathname === link.path;
             return (
@@ -69,7 +72,7 @@ export default function DashboardLayout() {
 
   useEffect(() => {
     setSidebarOpen(false);
-  }, [location]);
+  }, [location, setSidebarOpen]);
 
   return (
     <div className="min-h-screen bg-slate-50 flex">

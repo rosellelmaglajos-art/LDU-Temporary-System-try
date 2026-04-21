@@ -2,6 +2,17 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { FileText, CheckCircle2, Clock, XCircle } from 'lucide-react';
+import { Link } from 'react-router-dom';
+
+const StatsCard = ({ title, value, icon: Icon, color, bg }) => (
+  <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+    <div className={`w-12 h-12 rounded-xl ${bg} flex items-center justify-center mb-4`}>
+      <Icon className={`w-6 h-6 ${color}`} />
+    </div>
+    <p className="text-4xl font-extrabold text-slate-900">{value}</p>
+    <p className="text-sm font-bold text-slate-500 uppercase tracking-wider mt-1">{title}</p>
+  </div>
+);
 
 export default function DashboardHome() {
   const { user } = useAuth();
@@ -34,14 +45,8 @@ export default function DashboardHome() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {cards.map((c, i) => (
-          <div key={i} className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
-            <div className={`w-12 h-12 rounded-xl ${c.bg} flex items-center justify-center mb-4`}>
-              <c.icon className={`w-6 h-6 ${c.color}`} />
-            </div>
-            <p className="text-4xl font-extrabold text-slate-900">{c.value}</p>
-            <p className="text-sm font-bold text-slate-500 uppercase tracking-wider mt-1">{c.title}</p>
-          </div>
+        {cards.map((c) => (
+          <StatsCard key={c.title} {...c} />
         ))}
       </div>
 
@@ -50,7 +55,7 @@ export default function DashboardHome() {
           <h2 className="text-2xl font-bold mb-3">Need to submit a new request?</h2>
           <p className="text-blue-100 mb-6 font-medium leading-relaxed">Fill out a new Nomination or Job Analysis form. All forms are automatically routed to your supervisor for initial approval.</p>
           <div className="flex gap-4">
-             <span className="bg-white text-blue-900 px-6 py-3 rounded-xl font-bold">Go to Forms Tab &rarr;</span>
+             <Link to="/dashboard/forms" className="bg-white inline-block text-blue-900 px-6 py-3 rounded-xl font-bold">Go to Forms Tab &rarr;</Link>
           </div>
         </div>
       </div>

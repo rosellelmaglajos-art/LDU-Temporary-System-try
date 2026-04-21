@@ -3,12 +3,12 @@ import React from 'react';
 export default function NominationTemplate({ id }) {
   return (
     <div id={id} className="pdf-wrapper bg-white text-black font-serif text-[10pt] w-[750px] p-[20px_30px] mx-auto box-border">
-      <style dangerouslySetInnerHTML={{__html: `
+      <style>{`
         .pdf-wrapper table { width: 100%; border-collapse: collapse; margin-bottom: 12px; }
         .pdf-wrapper th, .pdf-wrapper td { border: 1px solid #000; padding: 5px 6px; vertical-align: top; text-align: left; }
         .pdf-wrapper .section-header { background-color: #DDD9C3; font-weight: bold; font-size: 10pt; }
         .pdf-wrapper .input-line-pdf { border-bottom: 1px solid black; display: inline-block; min-height: 14px; width: 90%; }
-      `}}/>
+      `}</style>
       <table>
         <tbody>
           <tr>
